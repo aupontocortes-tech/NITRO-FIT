@@ -1,0 +1,392 @@
+export const alunos = [
+  {
+    id: 1,
+    nome: "Ana Silva",
+    telefone: "(11) 98765-4321",
+    email: "ana.silva@email.com",
+    plano: "Trimestral",
+    status: "Ativo",
+    proximoTreino: "2026-02-16",
+    situacaoFinanceira: "Em dia",
+    evolucao: 78,
+  },
+  {
+    id: 2,
+    nome: "Carlos Oliveira",
+    telefone: "(11) 91234-5678",
+    email: "carlos.o@email.com",
+    plano: "Mensal",
+    status: "Ativo",
+    proximoTreino: "2026-02-15",
+    situacaoFinanceira: "Pendente",
+    evolucao: 45,
+  },
+  {
+    id: 3,
+    nome: "Maria Santos",
+    telefone: "(21) 99876-5432",
+    email: "maria.s@email.com",
+    plano: "Semestral",
+    status: "Ativo",
+    proximoTreino: "2026-02-17",
+    situacaoFinanceira: "Em dia",
+    evolucao: 92,
+  },
+  {
+    id: 4,
+    nome: "Pedro Lima",
+    telefone: "(21) 98765-1234",
+    email: "pedro.lima@email.com",
+    plano: "Anual",
+    status: "Ativo",
+    proximoTreino: "2026-02-18",
+    situacaoFinanceira: "Em dia",
+    evolucao: 65,
+  },
+  {
+    id: 5,
+    nome: "Julia Ferreira",
+    telefone: "(11) 97654-3210",
+    email: "julia.f@email.com",
+    plano: "Mensal",
+    status: "Inadimplente",
+    proximoTreino: "-",
+    situacaoFinanceira: "Atrasado",
+    evolucao: 30,
+  },
+  {
+    id: 6,
+    nome: "Lucas Mendes",
+    telefone: "(31) 99123-4567",
+    email: "lucas.m@email.com",
+    plano: "Trimestral",
+    status: "Ativo",
+    proximoTreino: "2026-02-15",
+    situacaoFinanceira: "Em dia",
+    evolucao: 85,
+  },
+  {
+    id: 7,
+    nome: "Beatriz Almeida",
+    telefone: "(11) 96543-2109",
+    email: "bia.almeida@email.com",
+    plano: "Mensal",
+    status: "Inadimplente",
+    proximoTreino: "-",
+    situacaoFinanceira: "Atrasado",
+    evolucao: 20,
+  },
+  {
+    id: 8,
+    nome: "Thiago Rocha",
+    telefone: "(21) 98321-6543",
+    email: "thiago.r@email.com",
+    plano: "Semestral",
+    status: "Ativo",
+    proximoTreino: "2026-02-16",
+    situacaoFinanceira: "Em dia",
+    evolucao: 70,
+  },
+]
+
+export const contratos = [
+  {
+    id: 1,
+    aluno: "Ana Silva",
+    plano: "Trimestral",
+    dataInicio: "2026-01-10",
+    dataFim: "2026-04-10",
+    status: "Ativo",
+    assinatura: "Assinado",
+  },
+  {
+    id: 2,
+    aluno: "Carlos Oliveira",
+    plano: "Mensal",
+    dataInicio: "2026-02-01",
+    dataFim: "2026-03-01",
+    status: "Ativo",
+    assinatura: "Assinado",
+  },
+  {
+    id: 3,
+    aluno: "Maria Santos",
+    plano: "Semestral",
+    dataInicio: "2025-11-15",
+    dataFim: "2026-05-15",
+    status: "Ativo",
+    assinatura: "Assinado",
+  },
+  {
+    id: 4,
+    aluno: "Pedro Lima",
+    plano: "Anual",
+    dataInicio: "2025-08-01",
+    dataFim: "2026-08-01",
+    status: "Ativo",
+    assinatura: "Assinado",
+  },
+  {
+    id: 5,
+    aluno: "Julia Ferreira",
+    plano: "Mensal",
+    dataInicio: "2026-01-05",
+    dataFim: "2026-02-05",
+    status: "Expirado",
+    assinatura: "Assinado",
+  },
+  {
+    id: 6,
+    aluno: "Lucas Mendes",
+    plano: "Trimestral",
+    dataInicio: "2026-01-20",
+    dataFim: "2026-04-20",
+    status: "Ativo",
+    assinatura: "Pendente",
+  },
+  {
+    id: 7,
+    aluno: "Beatriz Almeida",
+    plano: "Mensal",
+    dataInicio: "2025-12-10",
+    dataFim: "2026-01-10",
+    status: "Expirado",
+    assinatura: "Assinado",
+  },
+  {
+    id: 8,
+    aluno: "Thiago Rocha",
+    plano: "Semestral",
+    dataInicio: "2025-12-01",
+    dataFim: "2026-06-01",
+    status: "Ativo",
+    assinatura: "Assinado",
+  },
+]
+
+export const financeiro = [
+  {
+    id: 1,
+    aluno: "Ana Silva",
+    valor: 650.0,
+    status: "Pago",
+    metodo: "PIX",
+    vencimento: "2026-02-10",
+  },
+  {
+    id: 2,
+    aluno: "Carlos Oliveira",
+    valor: 250.0,
+    status: "Pendente",
+    metodo: "Boleto",
+    vencimento: "2026-02-15",
+  },
+  {
+    id: 3,
+    aluno: "Maria Santos",
+    valor: 1200.0,
+    status: "Pago",
+    metodo: "Cartao",
+    vencimento: "2026-02-15",
+  },
+  {
+    id: 4,
+    aluno: "Pedro Lima",
+    valor: 2200.0,
+    status: "Pago",
+    metodo: "PIX",
+    vencimento: "2026-02-01",
+  },
+  {
+    id: 5,
+    aluno: "Julia Ferreira",
+    valor: 250.0,
+    status: "Atrasado",
+    metodo: "Boleto",
+    vencimento: "2026-02-05",
+  },
+  {
+    id: 6,
+    aluno: "Lucas Mendes",
+    valor: 650.0,
+    status: "Pendente",
+    metodo: "PIX",
+    vencimento: "2026-02-20",
+  },
+  {
+    id: 7,
+    aluno: "Beatriz Almeida",
+    valor: 250.0,
+    status: "Atrasado",
+    metodo: "Boleto",
+    vencimento: "2026-01-10",
+  },
+  {
+    id: 8,
+    aluno: "Thiago Rocha",
+    valor: 1200.0,
+    status: "Pago",
+    metodo: "Cartao",
+    vencimento: "2026-02-01",
+  },
+]
+
+export const faturamentoMensal = [
+  { mes: "Set", valor: 8200 },
+  { mes: "Out", valor: 9500 },
+  { mes: "Nov", valor: 10200 },
+  { mes: "Dez", valor: 9800 },
+  { mes: "Jan", valor: 11500 },
+  { mes: "Fev", valor: 12450 },
+]
+
+export const distribuicaoPlanos = [
+  { name: "Mensal", value: 3, fill: "hsl(217, 91%, 60%)" },
+  { name: "Trimestral", value: 2, fill: "hsl(160, 60%, 45%)" },
+  { name: "Semestral", value: 2, fill: "hsl(38, 92%, 50%)" },
+  { name: "Anual", value: 1, fill: "hsl(280, 65%, 60%)" },
+]
+
+export const agendaSemanal = [
+  {
+    dia: "Seg",
+    data: "2026-02-16",
+    treinos: [
+      { hora: "06:00", aluno: "Ana Silva", tipo: "Musculacao" },
+      { hora: "07:00", aluno: "Carlos Oliveira", tipo: "Funcional" },
+      { hora: "09:00", aluno: "Pedro Lima", tipo: "Musculacao" },
+      { hora: "15:00", aluno: "Lucas Mendes", tipo: "HIIT" },
+    ],
+  },
+  {
+    dia: "Ter",
+    data: "2026-02-17",
+    treinos: [
+      { hora: "06:00", aluno: "Maria Santos", tipo: "Musculacao" },
+      { hora: "08:00", aluno: "Thiago Rocha", tipo: "Funcional" },
+      { hora: "16:00", aluno: "Ana Silva", tipo: "Cardio" },
+    ],
+  },
+  {
+    dia: "Qua",
+    data: "2026-02-18",
+    treinos: [
+      { hora: "06:00", aluno: "Carlos Oliveira", tipo: "Musculacao" },
+      { hora: "07:00", aluno: "Pedro Lima", tipo: "Funcional" },
+      { hora: "10:00", aluno: "Lucas Mendes", tipo: "Musculacao" },
+      { hora: "14:00", aluno: "Ana Silva", tipo: "Alongamento" },
+      { hora: "17:00", aluno: "Thiago Rocha", tipo: "HIIT" },
+    ],
+  },
+  {
+    dia: "Qui",
+    data: "2026-02-19",
+    treinos: [
+      { hora: "06:00", aluno: "Maria Santos", tipo: "Funcional" },
+      { hora: "08:00", aluno: "Carlos Oliveira", tipo: "Cardio" },
+      { hora: "15:00", aluno: "Pedro Lima", tipo: "Musculacao" },
+    ],
+  },
+  {
+    dia: "Sex",
+    data: "2026-02-20",
+    treinos: [
+      { hora: "06:00", aluno: "Ana Silva", tipo: "Musculacao" },
+      { hora: "07:00", aluno: "Lucas Mendes", tipo: "Funcional" },
+      { hora: "09:00", aluno: "Thiago Rocha", tipo: "Musculacao" },
+      { hora: "16:00", aluno: "Maria Santos", tipo: "HIIT" },
+    ],
+  },
+  {
+    dia: "Sab",
+    data: "2026-02-21",
+    treinos: [
+      { hora: "08:00", aluno: "Pedro Lima", tipo: "Cardio" },
+      { hora: "09:00", aluno: "Ana Silva", tipo: "Funcional" },
+    ],
+  },
+]
+
+export const treinosPorAluno = [
+  {
+    aluno: "Ana Silva",
+    treinos: [
+      {
+        nome: "Treino A - Superior",
+        exercicios: [
+          { nome: "Supino Reto", series: "4x12", carga: "30kg", obs: "Foco na execucao" },
+          { nome: "Desenvolvimento", series: "4x10", carga: "20kg", obs: "" },
+          { nome: "Puxada Frontal", series: "3x12", carga: "35kg", obs: "Segurar na contencao" },
+          { nome: "Rosca Direta", series: "3x15", carga: "10kg", obs: "" },
+          { nome: "Triceps Corda", series: "3x15", carga: "15kg", obs: "" },
+        ],
+      },
+      {
+        nome: "Treino B - Inferior",
+        exercicios: [
+          { nome: "Agachamento Livre", series: "4x10", carga: "40kg", obs: "Manter postura" },
+          { nome: "Leg Press 45", series: "4x12", carga: "80kg", obs: "" },
+          { nome: "Cadeira Extensora", series: "3x15", carga: "25kg", obs: "" },
+          { nome: "Stiff", series: "3x12", carga: "20kg", obs: "Lenta na descida" },
+          { nome: "Panturrilha", series: "4x20", carga: "30kg", obs: "" },
+        ],
+      },
+    ],
+  },
+  {
+    aluno: "Carlos Oliveira",
+    treinos: [
+      {
+        nome: "Treino A - Full Body",
+        exercicios: [
+          { nome: "Agachamento", series: "3x15", carga: "20kg", obs: "Iniciante" },
+          { nome: "Supino Maquina", series: "3x12", carga: "20kg", obs: "" },
+          { nome: "Remada Baixa", series: "3x12", carga: "25kg", obs: "" },
+          { nome: "Abdominal", series: "3x20", carga: "-", obs: "" },
+          { nome: "Esteira", series: "20min", carga: "-", obs: "Ritmo moderado" },
+        ],
+      },
+    ],
+  },
+  {
+    aluno: "Maria Santos",
+    treinos: [
+      {
+        nome: "Treino A - Push",
+        exercicios: [
+          { nome: "Supino Inclinado", series: "4x10", carga: "25kg", obs: "" },
+          { nome: "Desenvolvimento Halter", series: "4x10", carga: "14kg", obs: "" },
+          { nome: "Crucifixo", series: "3x12", carga: "10kg", obs: "" },
+          { nome: "Triceps Frances", series: "3x12", carga: "8kg", obs: "" },
+        ],
+      },
+      {
+        nome: "Treino B - Pull",
+        exercicios: [
+          { nome: "Barra Fixa", series: "4x8", carga: "-", obs: "Assistida se necessario" },
+          { nome: "Remada Curvada", series: "4x10", carga: "30kg", obs: "" },
+          { nome: "Rosca Alternada", series: "3x12", carga: "10kg", obs: "" },
+          { nome: "Face Pull", series: "3x15", carga: "10kg", obs: "" },
+        ],
+      },
+      {
+        nome: "Treino C - Legs",
+        exercicios: [
+          { nome: "Agachamento Sumô", series: "4x12", carga: "35kg", obs: "" },
+          { nome: "Bulgaro", series: "3x10", carga: "12kg", obs: "Cada perna" },
+          { nome: "Mesa Flexora", series: "4x12", carga: "20kg", obs: "" },
+          { nome: "Elevacao Pelvica", series: "4x15", carga: "40kg", obs: "" },
+        ],
+      },
+    ],
+  },
+]
+
+export const atividadesRecentes = [
+  { tipo: "contrato", descricao: "Contrato enviado para Lucas Mendes", tempo: "2 min atras" },
+  { tipo: "pagamento", descricao: "Pagamento confirmado - Ana Silva (R$ 650,00)", tempo: "15 min atras" },
+  { tipo: "aluno", descricao: "Novo aluno cadastrado: Thiago Rocha", tempo: "1h atras" },
+  { tipo: "treino", descricao: "Treino atualizado - Maria Santos (Treino C)", tempo: "2h atras" },
+  { tipo: "pagamento", descricao: "Pagamento confirmado - Pedro Lima (R$ 2.200,00)", tempo: "3h atras" },
+  { tipo: "cobranca", descricao: "Cobranca enviada para Julia Ferreira", tempo: "5h atras" },
+]
