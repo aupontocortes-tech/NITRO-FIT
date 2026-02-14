@@ -39,17 +39,18 @@ export function AppSidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-16 flex-col items-center border-r border-border bg-sidebar py-4 lg:w-56">
-      <div className="mb-6 flex flex-col items-center gap-2 px-3 lg:flex-row lg:items-center lg:gap-3">
+      <div className="mb-6 flex flex-col items-center gap-1 px-2 lg:gap-2">
         <Image
           src="/images/logo.png"
           alt="Nitro Fit logo"
-          width={48}
-          height={48}
-          className="h-12 w-12 rounded-lg object-contain"
+          width={120}
+          height={120}
+          className="h-14 w-14 rounded-xl object-contain lg:h-24 lg:w-24"
+          priority
         />
-        <div className="hidden lg:flex flex-col leading-none">
-          <span className="text-lg font-extrabold tracking-tight text-foreground">NITRO</span>
-          <span className="text-xs font-bold tracking-[0.25em] text-primary">FIT</span>
+        <div className="hidden lg:flex flex-col items-center leading-none">
+          <span className="text-xl font-extrabold tracking-tight text-foreground">NITRO</span>
+          <span className="text-sm font-bold tracking-[0.3em] text-primary">FIT</span>
         </div>
       </div>
 
