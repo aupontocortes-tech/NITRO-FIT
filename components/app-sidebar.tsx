@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -12,7 +13,6 @@ import {
   Send,
   BarChart3,
   Settings,
-  Activity,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -39,11 +39,18 @@ export function AppSidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-16 flex-col items-center border-r border-border bg-sidebar py-4 lg:w-56">
-      <div className="mb-8 flex items-center gap-2 px-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <Activity className="h-4 w-4 text-primary-foreground" />
+      <div className="mb-6 flex flex-col items-center gap-2 px-3 lg:flex-row lg:items-center lg:gap-3">
+        <Image
+          src="/images/logo.png"
+          alt="Nitro Fit logo"
+          width={48}
+          height={48}
+          className="h-12 w-12 rounded-lg object-contain"
+        />
+        <div className="hidden lg:flex flex-col leading-none">
+          <span className="text-lg font-extrabold tracking-tight text-foreground">NITRO</span>
+          <span className="text-xs font-bold tracking-[0.25em] text-primary">FIT</span>
         </div>
-        <span className="hidden text-lg font-bold text-foreground lg:inline">FitPro</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-2 w-full">
