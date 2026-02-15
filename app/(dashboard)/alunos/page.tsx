@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { CpfInput } from "@/components/ui/cpf-input"
 import {
   Table,
   TableBody,
@@ -20,6 +22,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -35,6 +47,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 import { alunos } from "@/lib/mock-data"
 
 function StatusBadge({ status }: { status: string }) {
@@ -52,13 +65,34 @@ function FinanceBadge({ status }: { status: string }) {
 }
 
 export default function AlunosPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [removerAlunoId, setRemoverAlunoId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const q = searchParams.get("q")
+    if (q) setSearchTerm(q)
+  }, [searchParams])
 
   const filtered = alunos.filter(
     (a) =>
       a.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const handleCadastrarAluno = () => {
+    setDialogOpen(false)
+    toast.success("Aluno cadastrado com sucesso!")
+  }
+
+  const handleRemoverAluno = () => {
+    if (removerAlunoId) {
+      toast.success("Aluno removido da lista.")
+      setRemoverAlunoId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -67,7 +101,7 @@ export default function AlunosPage() {
           <h1 className="text-2xl font-bold text-foreground">Alunos</h1>
           <p className="text-sm text-muted-foreground">{alunos.length} alunos cadastrados</p>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
@@ -82,6 +116,10 @@ export default function AlunosPage() {
               <div className="grid gap-2">
                 <Label htmlFor="name">Nome completo</Label>
                 <Input id="name" placeholder="Nome do aluno" className="bg-secondary" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <CpfInput id="cpf" className="bg-secondary" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -107,11 +145,30 @@ export default function AlunosPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="mt-2 w-full">Cadastrar aluno</Button>
+              <Button type="button" className="mt-2 w-full" onClick={handleCadastrarAluno}>
+                Cadastrar aluno
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
+
+      <AlertDialog open={removerAlunoId !== null} onOpenChange={(open) => !open && setRemoverAlunoId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover aluno?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acao nao pode ser desfeita. O aluno sera removido da lista.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoverAluno} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
@@ -166,10 +223,12 @@ export default function AlunosPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Ver perfil</DropdownMenuItem>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
-                          <DropdownMenuItem>Ver treinos</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Remover</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.info(`Perfil de ${aluno.nome}`)}>Ver perfil</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.info(`Editar ${aluno.nome}`)}>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push("/treinos")}>Ver treinos</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => setRemoverAlunoId(aluno.id)}>
+                            Remover
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Plus, Clock } from "lucide-react"
 import { agendaSemanal } from "@/lib/mock-data"
 
@@ -22,7 +23,7 @@ export default function AgendaPage() {
           <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
           <p className="text-sm text-muted-foreground">Calendario semanal de treinos</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => toast.success("Treino agendado!")}>
           <Plus className="h-4 w-4" />
           Agendar treino
         </Button>

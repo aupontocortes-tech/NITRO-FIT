@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Send, FileText, DollarSign, Users, Dumbbell, AlertCircle } from "lucide-react"
+import { toast } from "sonner"
 import { alunos, atividadesRecentes } from "@/lib/mock-data"
 
 const inadimplentes = alunos.filter((a) => a.status === "Inadimplente")
@@ -48,7 +49,7 @@ export function AlertasUrgentes() {
                   Plano {aluno.plano} - Pagamento atrasado
                 </p>
               </div>
-              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => toast.success(`Cobranca enviada para ${aluno.nome}`)}>
                 <Send className="h-3 w-3" />
                 Enviar cobranca
               </Button>

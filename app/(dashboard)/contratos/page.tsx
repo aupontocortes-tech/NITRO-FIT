@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -52,7 +53,7 @@ export default function ContratosPage() {
           <h1 className="text-2xl font-bold text-foreground">Contratos</h1>
           <p className="text-sm text-muted-foreground">{contratos.length} contratos cadastrados</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => toast.success("Novo contrato criado!")}>
           <Plus className="h-4 w-4" />
           Novo contrato
         </Button>
@@ -102,10 +103,10 @@ export default function ContratosPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Ver contrato</DropdownMenuItem>
-                          <DropdownMenuItem>Enviar para assinatura</DropdownMenuItem>
-                          <DropdownMenuItem>Renovar</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Cancelar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.info(`Contrato de ${contrato.aluno}`)}>Ver contrato</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.success("Link enviado para assinatura!")}>Enviar para assinatura</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.success("Contrato renovado!")}>Renovar</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => toast.error("Contrato cancelado.")}>Cancelar</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

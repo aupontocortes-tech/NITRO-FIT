@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -63,7 +64,7 @@ export default function ConfiguracoesPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <Button variant="outline" size="sm">Alterar foto</Button>
+                  <Button variant="outline" size="sm" onClick={() => toast.info("Selecione uma imagem (max 2MB)")}>Alterar foto</Button>
                   <p className="mt-1 text-xs text-muted-foreground">JPG, PNG. Maximo 2MB</p>
                 </div>
               </div>
@@ -98,7 +99,7 @@ export default function ConfiguracoesPage() {
                 />
               </div>
 
-              <Button>Salvar alteracoes</Button>
+              <Button onClick={() => toast.success("Alteracoes salvas!")}>Salvar alteracoes</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -150,7 +151,7 @@ export default function ConfiguracoesPage() {
                   <Switch />
                 </div>
               </div>
-              <Button>Salvar preferencias</Button>
+              <Button onClick={() => toast.success("Preferencias de notificacao salvas!")}>Salvar preferencias</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -177,7 +178,7 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
 
-              <Button>Alterar senha</Button>
+              <Button onClick={() => toast.success("Senha alterada com sucesso!")}>Alterar senha</Button>
 
               <Separator className="bg-border" />
 
@@ -211,11 +212,11 @@ export default function ConfiguracoesPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="text-sm font-bold text-foreground">R$ {plano.valor}</p>
-                    <Button variant="outline" size="sm">Editar</Button>
+                    <Button variant="outline" size="sm" onClick={() => toast.info(`Editar plano ${plano.nome}`)}>Editar</Button>
                   </div>
                 </div>
               ))}
-              <Button className="mt-2">Adicionar plano</Button>
+              <Button className="mt-2" onClick={() => toast.success("Novo plano adicionado!")}>Adicionar plano</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -252,7 +253,7 @@ export default function ConfiguracoesPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button>Salvar preferencias</Button>
+              <Button onClick={() => toast.success("Preferencias de aparencia salvas!")}>Salvar preferencias</Button>
             </CardContent>
           </Card>
         </TabsContent>

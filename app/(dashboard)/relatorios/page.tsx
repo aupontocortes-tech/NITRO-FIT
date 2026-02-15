@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import {
   Select,
   SelectContent,
@@ -81,7 +82,7 @@ export default function RelatoriosPage() {
               <SelectItem value="fev">Fevereiro 2026</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => toast.success("Relatorio exportado! (PDF)")}>
             <Download className="h-4 w-4" />
             Exportar
           </Button>

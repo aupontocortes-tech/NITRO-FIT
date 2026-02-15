@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 import {
   Select,
   SelectContent,
@@ -73,7 +74,7 @@ export default function CobrancasPage() {
           <h1 className="text-2xl font-bold text-foreground">Cobrancas automaticas</h1>
           <p className="text-sm text-muted-foreground">Gestao de cobrancas automatizadas</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => toast.success("Cobranca manual enviada!")}>
           <Send className="h-4 w-4" />
           Enviar cobranca manual
         </Button>
@@ -187,7 +188,7 @@ export default function CobrancasPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" className="w-full mt-3">
+              <Button variant="outline" className="w-full mt-3" onClick={() => toast.success("Configuracoes salvas!")}>
                 Salvar configuracoes
               </Button>
             </div>
@@ -222,7 +223,7 @@ export default function CobrancasPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => toast.success(`Cobranca reenviada para ${cob.aluno}`)}>
                     <Send className="h-3 w-3" />
                     Reenviar
                   </Button>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -34,7 +35,7 @@ export default function TreinosPage() {
           <h1 className="text-2xl font-bold text-foreground">Treinos</h1>
           <p className="text-sm text-muted-foreground">Gestao de treinos por aluno</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => toast.success("Novo treino cadastrado!")}>
           <Plus className="h-4 w-4" />
           Novo treino
         </Button>

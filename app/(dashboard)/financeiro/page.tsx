@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -46,11 +47,11 @@ export default function FinanceiroPage() {
           <p className="text-sm text-muted-foreground">Gestao de pagamentos e cobrancas</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => toast.info("Selecione os alunos para enviar cobranca")}>
             <Send className="h-4 w-4" />
             Enviar cobranca
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => toast.success("Nova cobranca criada!")}>
             <Plus className="h-4 w-4" />
             Nova cobranca
           </Button>
@@ -145,15 +146,15 @@ export default function FinanceiroPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="gap-2">
+                          <DropdownMenuItem className="gap-2" onClick={() => toast.success(`Pagamento de ${item.aluno} marcado como pago!`)}>
                             <CheckCircle className="h-3.5 w-3.5" />
                             Marcar como pago
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2">
+                          <DropdownMenuItem className="gap-2" onClick={() => toast.success(`Cobranca enviada para ${item.aluno}`)}>
                             <Send className="h-3.5 w-3.5" />
                             Enviar cobranca
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.info(`Detalhes: ${item.aluno} - R$ ${item.valor.toFixed(2)}`)}>Ver detalhes</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
