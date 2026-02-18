@@ -1,0 +1,184 @@
+// Prisma schema - NITRO-FIT (academia / personal)
+// Documentação: https://www.prisma.io/docs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== PLANOS (mensal, trimestral, etc.) ==========
+model Plano {
+  id            String    @id @default(uuid())
+  nome          String    // ex: Mensal, Trimestral, Semestral, Anual
+  valor         Decimal   @db.Decimal(10, 2) // ex: 250.00
+  duracaoMeses   Int       @map("duracao_meses") // 1, 3, 6, 12
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  alunos    Aluno[]
+  contratos Contrato[]
+  pagamentos Pagamento[]
+
+  @@map("planos")
+}
+
+// ========== ALUNOS ==========
+model Aluno {
+  id                  String    @id @default(uuid())
+  nome                String
+  email               String?
+  telefone            String?
+  cpf                 String?
+  planoId             String?   @map("plano_id")
+  status              String    @default("Ativo") // Ativo | Inadimplente
+  situacaoFinanceira  String?   @map("situacao_financeira") // Em dia | Atrasado
+  evolucao            Int?      @default(0) // 0-100 %
+  proximoTreino       DateTime? @map("proximo_treino")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  plano       Plano?       @relation(fields: [planoId], references: [id], onDelete: SetNull)
+  contratos   Contrato[]
+  pagamentos  Pagamento[]
+  cobrancas   Cobranca[]
+  treinos     Treino[]
+  agendamentos Agendamento[]
+
+  @@map("alunos")
+}
+
+// ========== CONTRATOS ==========
+model Contrato {
+  id         String   @id @default(uuid())
+  alunoId    String   @map("aluno_id")
+  planoId    String   @map("plano_id")
+  dataInicio DateTime @map("data_inicio")
+  dataFim    DateTime @map("data_fim")
+  status     String   @default("Ativo") // Ativo | Expirado
+  assinatura String   @default("Pendente") // Assinado | Pendente
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  plano Plano @relation(fields: [planoId], references: [id], onDelete: Restrict)
+
+  @@map("contratos")
+}
+
+// ========== PAGAMENTOS (financeiro) ==========
+model Pagamento {
+  id         String   @id @default(uuid())
+  alunoId    String   @map("aluno_id")
+  planoId    String?  @map("plano_id") // opcional, para valor do plano na época
+  valor      Decimal  @db.Decimal(10, 2)
+  status     String   @default("Pendente") // Pago | Pendente | Atrasado
+  metodo     String?  // PIX | Boleto | Cartão
+  vencimento DateTime @map("vencimento")
+  pagoEm     DateTime? @map("pago_em")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  plano Plano? @relation(fields: [planoId], references: [id], onDelete: SetNull)
+
+  @@map("pagamentos")
+}
+
+// ========== COBRANÇAS (histórico de cobranças automáticas/manuais) ==========
+model Cobranca {
+  id          String   @id @default(uuid())
+  alunoId     String   @map("aluno_id")
+  valor       String   // ex: "R$ 250,00" ou valor numérico em outra coluna
+  valorDecimal Decimal? @db.Decimal(10, 2) @map("valor_decimal")
+  status      String   @default("Agendada") // Enviada | Agendada | Paga
+  dataEnvio   DateTime? @map("data_envio")
+  metodo      String?  // WhatsApp | Email | WhatsApp + Email
+  tentativas  Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@map("cobrancas")
+}
+
+// ========== TREINOS (fichas por aluno: Treino A, Treino B, etc.) ==========
+model Treino {
+  id     String @id @default(uuid())
+  alunoId String @map("aluno_id")
+  nome   String // ex: Treino A - Superior, Treino B - Inferior
+  createdAt DateTime @default(now()) @map("created_at")
+
+  aluno     Aluno      @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  exercicios Exercicio[]
+
+  @@map("treinos")
+}
+
+// ========== EXERCÍCIOS (dentro de um treino) ==========
+model Exercicio {
+  id       String  @id @default(uuid())
+  treinoId String  @map("treino_id")
+  nome     String
+  series   String  // ex: 4x12, 3x15
+  carga    String  // ex: 30kg, -
+  obs      String?
+  ordem    Int     @default(0) @map("ordem")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  treino Treino @relation(fields: [treinoId], references: [id], onDelete: Cascade)
+
+  @@map("exercicios")
+}
+
+// ========== AGENDA (agendamentos de treinos na semana) ==========
+model Agendamento {
+  id      String   @id @default(uuid())
+  alunoId String   @map("aluno_id")
+  data    DateTime @db.Date
+  hora    String   // ex: 06:00, 07:00
+  tipo    String   // Musculacao | Funcional | HIIT | Cardio | Alongamento
+  createdAt DateTime @default(now()) @map("created_at")
+
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@map("agendamentos")
+}
+
+// ========== CONFIGURAÇÃO DE COBRANÇA (singleton / uma linha) ==========
+model ConfiguracaoCobranca {
+  id                      String   @id @default(uuid())
+  cobrancaAutomatica      Boolean  @default(true) @map("cobranca_automatica")
+  envioWhatsApp           Boolean  @default(true) @map("envio_whatsapp")
+  envioEmail              Boolean  @default(true) @map("envio_email")
+  diasAntesVencimento     Int      @default(3) @map("dias_antes_vencimento")
+  tentativasAposVencimento Int     @default(5) @map("tentativas_apos_vencimento")
+  intervaloEntreTentativasDias Int @default(3) @map("intervalo_entre_tentativas_dias")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracao_cobranca")
+}
+
+// ========== USUÁRIO (perfil do personal / dono da academia) ==========
+model Usuario {
+  id       String  @id @default(uuid())
+  nome     String
+  email    String
+  telefone String?
+  cref     String?
+  bio      String?
+  avatarUrl String? @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("usuarios")
+}
+
+// ========== ATIVIDADES RECENTES (feed do dashboard) ==========
+model Atividade {
+  id        String   @id @default(uuid())
+  tipo      String   // contrato | pagamento | aluno | treino | cobranca
+  descricao String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("atividades")
+}

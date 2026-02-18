@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -17,9 +18,39 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { User, Bell, Shield, CreditCard, Palette } from "lucide-react"
+import { User, Bell, Shield, CreditCard, Palette, Loader2 } from "lucide-react"
+
+type Usuario = { nome: string; email: string; telefone: string; cref: string; bio: string }
+type Plano = { id: string; nome: string; valor: number; duracaoMeses: number }
 
 export default function ConfiguracoesPage() {
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [planos, setPlanos] = useState<Plano[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/usuarios").then((r) => r.ok ? r.json() : null),
+      fetch("/api/planos").then((r) => r.ok ? r.json() : []),
+    ])
+      .then(([u, p]) => {
+        setUsuario(u)
+        setPlanos(p ?? [])
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  const u = usuario ?? { nome: "", email: "", telefone: "", cref: "", bio: "" }
+
   return (
     <div className="space-y-6">
       <div>
@@ -60,7 +91,7 @@ export default function ConfiguracoesPage() {
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarFallback className="bg-primary/20 text-primary text-lg font-bold">
-                    RC
+                    {u.nome.slice(0, 2).toUpperCase() || "RC"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
@@ -74,26 +105,26 @@ export default function ConfiguracoesPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Nome completo</Label>
-                  <Input defaultValue="Rafael Costa" className="bg-secondary" />
+                  <Input defaultValue={u.nome} className="bg-secondary" />
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input defaultValue="rafael@fitpro.com" type="email" className="bg-secondary" />
+                  <Input defaultValue={u.email} type="email" className="bg-secondary" />
                 </div>
                 <div className="space-y-2">
                   <Label>Telefone</Label>
-                  <Input defaultValue="(11) 99999-0000" className="bg-secondary" />
+                  <Input defaultValue={u.telefone} className="bg-secondary" />
                 </div>
                 <div className="space-y-2">
                   <Label>CREF</Label>
-                  <Input defaultValue="000123-G/SP" className="bg-secondary" />
+                  <Input defaultValue={u.cref} className="bg-secondary" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Bio</Label>
                 <Textarea
-                  defaultValue="Personal Trainer certificado com 8 anos de experiencia. Especialista em emagrecimento e hipertrofia."
+                  defaultValue={u.bio}
                   className="bg-secondary resize-none"
                   rows={3}
                 />
@@ -199,19 +230,14 @@ export default function ConfiguracoesPage() {
               <CardTitle className="text-base font-semibold">Configuracao de planos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[
-                { nome: "Mensal", valor: "250,00", duracao: "1 mes" },
-                { nome: "Trimestral", valor: "650,00", duracao: "3 meses" },
-                { nome: "Semestral", valor: "1.200,00", duracao: "6 meses" },
-                { nome: "Anual", valor: "2.200,00", duracao: "12 meses" },
-              ].map((plano, idx) => (
-                <div key={idx} className="flex flex-col gap-3 rounded-lg bg-secondary p-4 sm:flex-row sm:items-center sm:justify-between">
+              {planos.map((plano) => (
+                <div key={plano.id} className="flex flex-col gap-3 rounded-lg bg-secondary p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{plano.nome}</p>
-                    <p className="text-xs text-muted-foreground">Duracao: {plano.duracao}</p>
+                    <p className="text-xs text-muted-foreground">Duracao: {plano.duracaoMeses} {plano.duracaoMeses === 1 ? "mes" : "meses"}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="text-sm font-bold text-foreground">R$ {plano.valor}</p>
+                    <p className="text-sm font-bold text-foreground">R$ {plano.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                     <Button variant="outline" size="sm" onClick={() => toast.info(`Editar plano ${plano.nome}`)}>Editar</Button>
                   </div>
                 </div>

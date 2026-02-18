@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,14 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, FileSignature, MoreHorizontal } from "lucide-react"
+import { Plus, FileSignature, MoreHorizontal, Loader2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { contratos } from "@/lib/mock-data"
+
+type Contrato = {
+  id: string
+  aluno: string
+  plano: string
+  dataInicio: string
+  dataFim: string
+  status: string
+  assinatura: string
+}
 
 function ContractStatusBadge({ status }: { status: string }) {
   if (status === "Ativo") {
@@ -46,6 +56,25 @@ function SignatureBadge({ status }: { status: string }) {
 }
 
 export default function ContratosPage() {
+  const [contratos, setContratos] = useState<Contrato[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/contratos")
+      .then((res) => res.ok ? res.json() : [])
+      .then(setContratos)
+      .catch(() => toast.error("Erro ao carregar contratos"))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -78,40 +107,48 @@ export default function ContratosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contratos.map((contrato) => (
-                  <TableRow key={contrato.id} className="border-border hover:bg-secondary/50">
-                    <TableCell className="font-medium text-foreground">{contrato.aluno}</TableCell>
-                    <TableCell className="text-muted-foreground">{contrato.plano}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(contrato.dataInicio).toLocaleDateString("pt-BR")}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(contrato.dataFim).toLocaleDateString("pt-BR")}
-                    </TableCell>
-                    <TableCell>
-                      <ContractStatusBadge status={contrato.status} />
-                    </TableCell>
-                    <TableCell>
-                      <SignatureBadge status={contrato.assinatura} />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Acoes</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => toast.info(`Contrato de ${contrato.aluno}`)}>Ver contrato</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast.success("Link enviado para assinatura!")}>Enviar para assinatura</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast.success("Contrato renovado!")}>Renovar</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => toast.error("Contrato cancelado.")}>Cancelar</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {contratos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      Nenhum contrato cadastrado.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  contratos.map((contrato) => (
+                    <TableRow key={contrato.id} className="border-border hover:bg-secondary/50">
+                      <TableCell className="font-medium text-foreground">{contrato.aluno}</TableCell>
+                      <TableCell className="text-muted-foreground">{contrato.plano}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(contrato.dataInicio).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(contrato.dataFim).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell>
+                        <ContractStatusBadge status={contrato.status} />
+                      </TableCell>
+                      <TableCell>
+                        <SignatureBadge status={contrato.assinatura} />
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Acoes</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => toast.info(`Contrato de ${contrato.aluno}`)}>Ver contrato</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast.success("Link enviado para assinatura!")}>Enviar para assinatura</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast.success("Contrato renovado!")}>Renovar</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => toast.error("Contrato cancelado.")}>Cancelar</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

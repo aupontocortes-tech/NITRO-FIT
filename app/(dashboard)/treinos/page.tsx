@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,13 +20,49 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Plus, Dumbbell, TrendingUp } from "lucide-react"
-import { treinosPorAluno, alunos } from "@/lib/mock-data"
+import { Plus, Dumbbell, TrendingUp, Loader2 } from "lucide-react"
+type TreinoItem = { id: string; nome: string; exercicios: { nome: string; series: string; carga: string; obs: string }[] }
+type TreinosPorAluno = { aluno: string; alunoId: string; treinos: TreinoItem[] }
+type AlunoInfo = { nome: string; plano: string; evolucao: number }
 
 export default function TreinosPage() {
-  const [selectedAluno, setSelectedAluno] = useState(treinosPorAluno[0].aluno)
-  const alunoData = treinosPorAluno.find((t) => t.aluno === selectedAluno)
-  const alunoInfo = alunos.find((a) => a.nome === selectedAluno)
+  const [treinosPorAluno, setTreinosPorAluno] = useState<TreinosPorAluno[]>([])
+  const [alunos, setAlunos] = useState<AlunoInfo[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedAluno, setSelectedAluno] = useState<string>("")
+
+  useEffect(() => {
+    Promise.all([fetch("/api/treinos").then((r) => r.ok ? r.json() : []), fetch("/api/alunos").then((r) => r.ok ? r.json() : [])])
+      .then(([treinosData, alunosData]) => {
+        setTreinosPorAluno(treinosData)
+        setAlunos(alunosData.map((a: { nome: string; plano: string; evolucao: number }) => ({ nome: a.nome, plano: a.plano, evolucao: a.evolucao ?? 0 })))
+        if (treinosData.length > 0 && !selectedAluno) setSelectedAluno(treinosData[0].aluno)
+      })
+      .catch(() => toast.error("Erro ao carregar treinos"))
+      .finally(() => setLoading(false))
+  }, [])
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (treinosPorAluno.length === 0) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">Treinos</h1>
+        <p className="text-muted-foreground">Nenhum treino cadastrado. Cadastre alunos e adicione treinos.</p>
+      </div>
+    )
+  }
+
+  const displayAluno = selectedAluno || treinosPorAluno[0]?.aluno || ""
+  const alunoDataDisplay = treinosPorAluno.find((t) => t.aluno === displayAluno)
+  const alunoInfoDisplay = alunos.find((a) => a.nome === displayAluno)
 
   return (
     <div className="space-y-6">
@@ -51,7 +87,7 @@ export default function TreinosPage() {
                 key={item.aluno}
                 onClick={() => setSelectedAluno(item.aluno)}
                 className={`w-full rounded-lg p-3 text-left transition-colors ${
-                  selectedAluno === item.aluno
+                  displayAluno === item.aluno
                     ? "bg-primary/10 border border-primary/30"
                     : "bg-card border border-border hover:bg-secondary"
                 }`}
@@ -73,39 +109,39 @@ export default function TreinosPage() {
         </div>
 
         <div className="lg:col-span-3 space-y-4">
-          {alunoInfo && (
+          {alunoInfoDisplay && (
             <Card className="border-border bg-card">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20">
                   <Dumbbell className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-lg font-bold text-foreground">{alunoInfo.nome}</p>
-                  <p className="text-sm text-muted-foreground">Plano {alunoInfo.plano}</p>
+                  <p className="text-lg font-bold text-foreground">{alunoInfoDisplay.nome}</p>
+                  <p className="text-sm text-muted-foreground">Plano {alunoInfoDisplay.plano}</p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1.5">
                     <TrendingUp className="h-4 w-4 text-success" />
                     <span className="text-sm font-medium text-foreground">
-                      {alunoInfo.evolucao}% evolucao
+                      {alunoInfoDisplay.evolucao}% evolucao
                     </span>
                   </div>
-                  <Progress value={alunoInfo.evolucao} className="mt-1.5 h-1.5 w-32" />
+                  <Progress value={alunoInfoDisplay.evolucao} className="mt-1.5 h-1.5 w-32" />
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {alunoData && alunoData.treinos.length > 0 && (
-            <Tabs defaultValue={alunoData.treinos[0].nome}>
+          {alunoDataDisplay && alunoDataDisplay.treinos.length > 0 && (
+            <Tabs defaultValue={alunoDataDisplay.treinos[0].nome}>
               <TabsList className="bg-secondary">
-                {alunoData.treinos.map((treino) => (
+                {alunoDataDisplay.treinos.map((treino) => (
                   <TabsTrigger key={treino.nome} value={treino.nome} className="text-xs">
                     {treino.nome}
                   </TabsTrigger>
                 ))}
               </TabsList>
-              {alunoData.treinos.map((treino) => (
+              {alunoDataDisplay.treinos.map((treino) => (
                 <TabsContent key={treino.nome} value={treino.nome}>
                   <Card className="border-border bg-card">
                     <CardHeader className="pb-3">

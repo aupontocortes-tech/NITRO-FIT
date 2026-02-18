@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Search, MoreHorizontal } from "lucide-react"
+import { Plus, Search, MoreHorizontal, Loader2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +48,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
-import { alunos } from "@/lib/mock-data"
+
+type Aluno = {
+  id: string
+  nome: string
+  email: string
+  telefone: string
+  plano: string
+  status: string
+  situacaoFinanceira: string
+  evolucao: number
+  proximoTreino: string
+}
+
+type Plano = { id: string; nome: string; valor: number; duracaoMeses: number }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "Ativo") {
@@ -67,9 +80,41 @@ function FinanceBadge({ status }: { status: string }) {
 export default function AlunosPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [alunos, setAlunos] = useState<Aluno[]>([])
+  const [planos, setPlanos] = useState<Plano[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [removerAlunoId, setRemoverAlunoId] = useState<number | null>(null)
+  const [removerAlunoId, setRemoverAlunoId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [formNome, setFormNome] = useState("")
+  const [formCpf, setFormCpf] = useState("")
+  const [formEmail, setFormEmail] = useState("")
+  const [formTelefone, setFormTelefone] = useState("")
+  const [formPlanoId, setFormPlanoId] = useState("")
+
+  const fetchAlunos = useCallback(async () => {
+    try {
+      const res = await fetch("/api/alunos")
+      if (res.ok) setAlunos(await res.json())
+    } catch (e) {
+      toast.error("Erro ao carregar alunos")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchPlanos = useCallback(async () => {
+    try {
+      const res = await fetch("/api/planos")
+      if (res.ok) setPlanos(await res.json())
+    } catch (_) {}
+  }, [])
+
+  useEffect(() => {
+    fetchAlunos()
+    fetchPlanos()
+  }, [fetchAlunos, fetchPlanos])
 
   useEffect(() => {
     const q = searchParams.get("q")
@@ -79,19 +124,69 @@ export default function AlunosPage() {
   const filtered = alunos.filter(
     (a) =>
       a.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (a.email && a.email.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
-  const handleCadastrarAluno = () => {
-    setDialogOpen(false)
-    toast.success("Aluno cadastrado com sucesso!")
+  const handleCadastrarAluno = async () => {
+    if (!formNome.trim()) {
+      toast.error("Nome é obrigatório")
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch("/api/alunos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: formNome.trim(),
+          email: formEmail.trim() || undefined,
+          telefone: formTelefone.trim() || undefined,
+          cpf: formCpf.trim() || undefined,
+          planoId: formPlanoId || undefined,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || "Erro ao cadastrar")
+        return
+      }
+      setDialogOpen(false)
+      setFormNome("")
+      setFormCpf("")
+      setFormEmail("")
+      setFormTelefone("")
+      setFormPlanoId("")
+      toast.success("Aluno cadastrado com sucesso!")
+      fetchAlunos()
+    } catch {
+      toast.error("Erro ao cadastrar aluno")
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleRemoverAluno = () => {
-    if (removerAlunoId) {
+  const handleRemoverAluno = async () => {
+    if (!removerAlunoId) return
+    try {
+      const res = await fetch(`/api/alunos/${removerAlunoId}`, { method: "DELETE" })
+      if (!res.ok) {
+        toast.error("Erro ao remover aluno")
+        return
+      }
       toast.success("Aluno removido da lista.")
       setRemoverAlunoId(null)
+      fetchAlunos()
+    } catch {
+      toast.error("Erro ao remover aluno")
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -115,38 +210,68 @@ export default function AlunosPage() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Nome completo</Label>
-                <Input id="name" placeholder="Nome do aluno" className="bg-secondary" />
+                <Input
+                  id="name"
+                  placeholder="Nome do aluno"
+                  className="bg-secondary"
+                  value={formNome}
+                  onChange={(e) => setFormNome(e.target.value)}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="cpf">CPF</Label>
-                <CpfInput id="cpf" className="bg-secondary" />
+                <CpfInput
+                  id="cpf"
+                  className="bg-secondary"
+                  value={formCpf}
+                  onChange={(e) => setFormCpf(e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="email@exemplo.com" className="bg-secondary" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    className="bg-secondary"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" placeholder="(11) 99999-9999" className="bg-secondary" />
+                  <Input
+                    id="phone"
+                    placeholder="(11) 99999-9999"
+                    className="bg-secondary"
+                    value={formTelefone}
+                    onChange={(e) => setFormTelefone(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="plan">Plano</Label>
-                <Select>
+                <Select value={formPlanoId} onValueChange={setFormPlanoId}>
                   <SelectTrigger className="bg-secondary">
                     <SelectValue placeholder="Selecione o plano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mensal">Mensal - R$ 250,00</SelectItem>
-                    <SelectItem value="trimestral">Trimestral - R$ 650,00</SelectItem>
-                    <SelectItem value="semestral">Semestral - R$ 1.200,00</SelectItem>
-                    <SelectItem value="anual">Anual - R$ 2.200,00</SelectItem>
+                    {planos.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome} - R$ {p.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="button" className="mt-2 w-full" onClick={handleCadastrarAluno}>
-                Cadastrar aluno
+              <Button
+                type="button"
+                className="mt-2 w-full"
+                onClick={handleCadastrarAluno}
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cadastrar aluno"}
               </Button>
             </div>
           </DialogContent>
@@ -201,39 +326,47 @@ export default function AlunosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((aluno) => (
-                  <TableRow key={aluno.id} className="border-border hover:bg-secondary/50">
-                    <TableCell className="font-medium text-foreground">{aluno.nome}</TableCell>
-                    <TableCell className="text-muted-foreground">{aluno.telefone}</TableCell>
-                    <TableCell className="text-muted-foreground">{aluno.email}</TableCell>
-                    <TableCell className="text-muted-foreground">{aluno.plano}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={aluno.status} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{aluno.proximoTreino}</TableCell>
-                    <TableCell>
-                      <FinanceBadge status={aluno.situacaoFinanceira} />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Acoes</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => toast.info(`Perfil de ${aluno.nome}`)}>Ver perfil</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast.info(`Editar ${aluno.nome}`)}>Editar</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push("/treinos")}>Ver treinos</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => setRemoverAlunoId(aluno.id)}>
-                            Remover
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      Nenhum aluno cadastrado. Clique em Novo aluno para começar.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filtered.map((aluno) => (
+                    <TableRow key={aluno.id} className="border-border hover:bg-secondary/50">
+                      <TableCell className="font-medium text-foreground">{aluno.nome}</TableCell>
+                      <TableCell className="text-muted-foreground">{aluno.telefone}</TableCell>
+                      <TableCell className="text-muted-foreground">{aluno.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{aluno.plano}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={aluno.status} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{aluno.proximoTreino}</TableCell>
+                      <TableCell>
+                        <FinanceBadge status={aluno.situacaoFinanceira} />
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Acoes</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => toast.info(`Perfil de ${aluno.nome}`)}>Ver perfil</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toast.info(`Editar ${aluno.nome}`)}>Editar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push("/treinos")}>Ver treinos</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setRemoverAlunoId(aluno.id)}>
+                              Remover
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,14 +13,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Send, CheckCircle, MoreHorizontal, DollarSign, Clock, AlertTriangle } from "lucide-react"
+import { Plus, Send, CheckCircle, MoreHorizontal, DollarSign, Clock, AlertTriangle, Loader2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { financeiro } from "@/lib/mock-data"
+type Pagamento = {
+  id: string
+  aluno: string
+  valor: number
+  status: string
+  metodo: string
+  vencimento: string
+}
 
 function PaymentStatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -34,11 +42,30 @@ function PaymentStatusBadge({ status }: { status: string }) {
   }
 }
 
-const totalPago = financeiro.filter((f) => f.status === "Pago").reduce((acc, f) => acc + f.valor, 0)
-const totalPendente = financeiro.filter((f) => f.status === "Pendente").reduce((acc, f) => acc + f.valor, 0)
-const totalAtrasado = financeiro.filter((f) => f.status === "Atrasado").reduce((acc, f) => acc + f.valor, 0)
-
 export default function FinanceiroPage() {
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/pagamentos")
+      .then((res) => res.ok ? res.json() : [])
+      .then(setPagamentos)
+      .catch(() => toast.error("Erro ao carregar pagamentos"))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const totalPago = pagamentos.filter((f) => f.status === "Pago").reduce((acc, f) => acc + f.valor, 0)
+  const totalPendente = pagamentos.filter((f) => f.status === "Pendente").reduce((acc, f) => acc + f.valor, 0)
+  const totalAtrasado = pagamentos.filter((f) => f.status === "Atrasado").reduce((acc, f) => acc + f.valor, 0)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -124,7 +151,14 @@ export default function FinanceiroPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {financeiro.map((item) => (
+                {pagamentos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      Nenhum pagamento cadastrado.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pagamentos.map((item) => (
                   <TableRow key={item.id} className="border-border hover:bg-secondary/50">
                     <TableCell className="font-medium text-foreground">{item.aluno}</TableCell>
                     <TableCell className="text-foreground font-medium">
@@ -159,7 +193,8 @@ export default function FinanceiroPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

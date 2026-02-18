@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,43 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Send, Settings, Clock, CheckCircle, AlertTriangle, Zap } from "lucide-react"
-import { alunos } from "@/lib/mock-data"
+import { Send, Settings, Clock, CheckCircle, AlertTriangle, Zap, Loader2 } from "lucide-react"
 
-const cobrancasAutomaticas = [
-  {
-    aluno: "Julia Ferreira",
-    valor: "R$ 250,00",
-    status: "Enviada",
-    dataEnvio: "10/02/2026",
-    metodo: "WhatsApp + Email",
-    tentativas: 3,
-  },
-  {
-    aluno: "Beatriz Almeida",
-    valor: "R$ 250,00",
-    status: "Enviada",
-    dataEnvio: "10/01/2026",
-    metodo: "WhatsApp + Email",
-    tentativas: 5,
-  },
-  {
-    aluno: "Carlos Oliveira",
-    valor: "R$ 250,00",
-    status: "Agendada",
-    dataEnvio: "15/02/2026",
-    metodo: "WhatsApp",
-    tentativas: 0,
-  },
-  {
-    aluno: "Lucas Mendes",
-    valor: "R$ 650,00",
-    status: "Agendada",
-    dataEnvio: "20/02/2026",
-    metodo: "Email",
-    tentativas: 0,
-  },
-]
+type CobrancaItem = {
+  id: string
+  aluno: string
+  valor: string
+  status: string
+  dataEnvio: string | null
+  metodo: string
+  tentativas: number
+}
 
 function CobrancaStatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -65,7 +40,31 @@ function CobrancaStatusBadge({ status }: { status: string }) {
 }
 
 export default function CobrancasPage() {
-  const inadimplentes = alunos.filter((a) => a.status === "Inadimplente")
+  const [cobrancas, setCobrancas] = useState<CobrancaItem[]>([])
+  const [inadimplentesCount, setInadimplentesCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/cobrancas").then((r) => r.ok ? r.json() : []),
+      fetch("/api/alunos").then((r) => r.ok ? r.json() : []),
+    ])
+      .then(([cob, alunosList]) => {
+        setCobrancas(cob)
+        setInadimplentesCount((alunosList as { status: string }[]).filter((a) => a.status === "Inadimplente").length)
+      })
+      .catch(() => toast.error("Erro ao carregar"))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const cobrancasAtivas = cobrancas.filter((c) => c.status === "Enviada" || c.status === "Agendada").length
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -89,7 +88,7 @@ export default function CobrancasPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Cobrancas ativas</p>
-                <p className="text-xl font-bold text-foreground">4</p>
+                <p className="text-xl font-bold text-foreground">{cobrancasAtivas}</p>
               </div>
             </div>
           </CardContent>
@@ -115,7 +114,7 @@ export default function CobrancasPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Inadimplentes</p>
-                <p className="text-xl font-bold text-foreground">{inadimplentes.length}</p>
+                <p className="text-xl font-bold text-foreground">{inadimplentesCount}</p>
               </div>
             </div>
           </CardContent>
@@ -202,9 +201,9 @@ export default function CobrancasPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {cobrancasAutomaticas.map((cob, idx) => (
+            {cobrancas.map((cob) => (
               <div
-                key={idx}
+                key={cob.id}
                 className="flex flex-col gap-3 rounded-lg bg-secondary p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex-1">
@@ -216,7 +215,7 @@ export default function CobrancasPage() {
                     <span>{cob.valor}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {cob.dataEnvio}
+                      {cob.dataEnvio ?? "-"}
                     </span>
                     <span>{cob.metodo}</span>
                     <span>{cob.tentativas} tentativa{cob.tentativas !== 1 ? "s" : ""}</span>
