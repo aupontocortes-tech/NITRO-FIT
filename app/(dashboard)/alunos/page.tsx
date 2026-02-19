@@ -55,6 +55,7 @@ type Aluno = {
   email: string
   telefone: string
   plano: string
+  planoId?: string | null
   status: string
   situacaoFinanceira: string
   evolucao: number
@@ -95,8 +96,11 @@ export default function AlunosPage() {
 
   const fetchAlunos = useCallback(async () => {
     try {
-      const res = await fetch("/api/alunos")
-      if (res.ok) setAlunos(await res.json())
+      const res = await fetch("/api/alunos", { cache: "no-store" })
+      if (res.ok) {
+        const data = await res.json()
+        setAlunos(Array.isArray(data) ? data : [])
+      }
     } catch (e) {
       toast.error("Erro ao carregar alunos")
     } finally {
@@ -142,14 +146,16 @@ export default function AlunosPage() {
           email: formEmail.trim() || undefined,
           telefone: formTelefone.trim() || undefined,
           cpf: formCpf.trim() || undefined,
-          planoId: formPlanoId || undefined,
+          ...(formPlanoId?.trim() ? { planoId: formPlanoId.trim() } : {}),
         }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        toast.error(err.error || "Erro ao cadastrar")
+        toast.error((err as { error?: string }).error || "Erro ao cadastrar")
         return
       }
+      const novoAluno = (await res.json()) as Aluno
+      setAlunos((prev) => [...prev, novoAluno].sort((a, b) => a.nome.localeCompare(b.nome)))
       setDialogOpen(false)
       setFormNome("")
       setFormCpf("")
@@ -157,7 +163,7 @@ export default function AlunosPage() {
       setFormTelefone("")
       setFormPlanoId("")
       toast.success("Aluno cadastrado com sucesso!")
-      fetchAlunos()
+      await fetchAlunos()
     } catch {
       toast.error("Erro ao cadastrar aluno")
     } finally {
@@ -224,7 +230,7 @@ export default function AlunosPage() {
                   id="cpf"
                   className="bg-secondary"
                   value={formCpf}
-                  onChange={(e) => setFormCpf(e.target.value)}
+                  onChange={(valor) => setFormCpf(valor ?? "")}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -257,8 +263,8 @@ export default function AlunosPage() {
                     <SelectValue placeholder="Selecione o plano" />
                   </SelectTrigger>
                   <SelectContent>
-                    {planos.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
+                    {planos.filter((p) => p.id).map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
                         {p.nome} - R$ {p.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </SelectItem>
                     ))}

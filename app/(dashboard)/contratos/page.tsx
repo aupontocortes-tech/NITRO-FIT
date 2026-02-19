@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import {
   Table,
@@ -13,6 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Plus, FileSignature, MoreHorizontal, Loader2 } from "lucide-react"
 import {
   DropdownMenu,
@@ -24,10 +41,14 @@ import {
 type Contrato = {
   id: string
   aluno: string
+  alunoId: string
   plano: string
+  planoId: string
   dataInicio: string
   dataFim: string
+  dataNascimento: string | null
   status: string
+  situacaoFinanceira: string
   assinatura: string
 }
 
@@ -55,17 +76,90 @@ function SignatureBadge({ status }: { status: string }) {
   )
 }
 
+function SituacaoBadge({ situacao }: { situacao: string }) {
+  const s = situacao?.toLowerCase() ?? ""
+  if (s === "em dia") {
+    return <Badge variant="outline" className="border-success/30 text-success">Em dia</Badge>
+  }
+  if (s === "atrasado" || s === "em atraso" || s === "devendo") {
+    return <Badge variant="outline" className="border-destructive/50 text-destructive">Em atraso</Badge>
+  }
+  return <Badge variant="outline" className="text-muted-foreground">{situacao || "-"}</Badge>
+}
+
+type AlunoOption = { id: string; nome: string }
+type PlanoOption = { id: string; nome: string; duracaoMeses: number }
+
 export default function ContratosPage() {
   const [contratos, setContratos] = useState<Contrato[]>([])
   const [loading, setLoading] = useState(true)
+  const [novoContratoOpen, setNovoContratoOpen] = useState(false)
+  const [alunos, setAlunos] = useState<AlunoOption[]>([])
+  const [planos, setPlanos] = useState<PlanoOption[]>([])
+  const [formAlunoId, setFormAlunoId] = useState("")
+  const [formPlanoId, setFormPlanoId] = useState("")
+  const [formDataInicio, setFormDataInicio] = useState("")
+  const [formDataFim, setFormDataFim] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    fetch("/api/contratos")
-      .then((res) => res.ok ? res.json() : [])
+  const carregarContratos = useCallback(() => {
+    return fetch("/api/contratos", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : []))
       .then(setContratos)
       .catch(() => toast.error("Erro ao carregar contratos"))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    carregarContratos()
+  }, [carregarContratos])
+
+  useEffect(() => {
+    if (!novoContratoOpen) return
+    fetch("/api/alunos", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list: { id: string; nome: string }[]) => setAlunos(list))
+      .catch(() => setAlunos([]))
+    fetch("/api/planos", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list: { id: string; nome: string; duracaoMeses: number }[]) => setPlanos(list))
+      .catch(() => setPlanos([]))
+    const hoje = new Date().toISOString().slice(0, 10)
+    setFormDataInicio(hoje)
+    setFormDataFim("")
+    setFormAlunoId("")
+    setFormPlanoId("")
+  }, [novoContratoOpen])
+
+  const handleNovoContrato = () => {
+    if (!formAlunoId || !formPlanoId) {
+      toast.error("Selecione o aluno e o plano.")
+      return
+    }
+    setSubmitting(true)
+    fetch("/api/contratos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        alunoId: formAlunoId,
+        planoId: formPlanoId,
+        dataInicio: formDataInicio || undefined,
+        dataFim: formDataFim || undefined,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) return res.json().then((d) => Promise.reject(new Error(d?.error ?? "Erro")))
+        return res.json()
+      })
+      .then(() => {
+        toast.success("Contrato criado!")
+        setNovoContratoOpen(false)
+        carregarContratos()
+      })
+      .catch((e) => toast.error(e?.message ?? "Erro ao criar contrato"))
+      .finally(() => setSubmitting(false))
+  }
 
   if (loading) {
     return (
@@ -82,10 +176,77 @@ export default function ContratosPage() {
           <h1 className="text-2xl font-bold text-foreground">Contratos</h1>
           <p className="text-sm text-muted-foreground">{contratos.length} contratos cadastrados</p>
         </div>
-        <Button className="gap-2" onClick={() => toast.success("Novo contrato criado!")}>
-          <Plus className="h-4 w-4" />
-          Novo contrato
-        </Button>
+        <Dialog open={novoContratoOpen} onOpenChange={setNovoContratoOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Novo contrato
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Novo contrato</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Aluno</Label>
+                <Select value={formAlunoId} onValueChange={setFormAlunoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o aluno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alunos.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Plano</Label>
+                <Select value={formPlanoId} onValueChange={setFormPlanoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {planos.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Data início</Label>
+                <Input
+                  type="date"
+                  value={formDataInicio}
+                  onChange={(e) => setFormDataInicio(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Data fim (opcional)</Label>
+                <Input
+                  type="date"
+                  value={formDataFim}
+                  onChange={(e) => setFormDataFim(e.target.value)}
+                  placeholder="Preenchido pelo plano se vazio"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setNovoContratoOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleNovoContrato} disabled={submitting} className="gap-2">
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? "Salvando…" : "Criar contrato"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card className="border-border bg-card">
@@ -99,17 +260,19 @@ export default function ContratosPage() {
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="text-muted-foreground">Aluno</TableHead>
                   <TableHead className="text-muted-foreground">Plano</TableHead>
-                  <TableHead className="text-muted-foreground">Data inicio</TableHead>
+                  <TableHead className="text-muted-foreground">Data início</TableHead>
                   <TableHead className="text-muted-foreground">Data fim</TableHead>
+                  <TableHead className="text-muted-foreground">Data nasc.</TableHead>
                   <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-muted-foreground">Situação</TableHead>
                   <TableHead className="text-muted-foreground">Assinatura digital</TableHead>
-                  <TableHead className="text-muted-foreground sr-only">Acoes</TableHead>
+                  <TableHead className="text-muted-foreground sr-only">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {contratos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       Nenhum contrato cadastrado.
                     </TableCell>
                   </TableRow>
@@ -124,8 +287,16 @@ export default function ContratosPage() {
                       <TableCell className="text-muted-foreground">
                         {new Date(contrato.dataFim).toLocaleDateString("pt-BR")}
                       </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {contrato.dataNascimento
+                          ? new Date(contrato.dataNascimento).toLocaleDateString("pt-BR")
+                          : "-"}
+                      </TableCell>
                       <TableCell>
                         <ContractStatusBadge status={contrato.status} />
+                      </TableCell>
+                      <TableCell>
+                        <SituacaoBadge situacao={contrato.situacaoFinanceira} />
                       </TableCell>
                       <TableCell>
                         <SignatureBadge status={contrato.assinatura} />

@@ -1,11 +1,29 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Plus, Clock, Loader2 } from "lucide-react"
+
+const TIPOS_TREINO = ["Musculacao", "Funcional", "HIIT", "Cardio", "Alongamento"]
 
 const tipoColors: Record<string, string> = {
   Musculacao: "bg-primary/20 text-primary",
@@ -43,6 +61,19 @@ function buildAgendaSemanal(agendamentos: AgendamentoItem[]) {
 export default function AgendaPage() {
   const [agendaSemanal, setAgendaSemanal] = useState<{ dia: string; data: string; treinos: { hora: string; aluno: string; tipo: string }[] }[]>([])
   const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [alunos, setAlunos] = useState<{ id: string; nome: string }[]>([])
+  const [formData, setFormData] = useState("")
+  const [formHora, setFormHora] = useState("08:00")
+  const [formAlunoId, setFormAlunoId] = useState("")
+  const [formTipo, setFormTipo] = useState("Musculacao")
+
+  const fetchAgenda = useCallback(async () => {
+    const res = await fetch("/api/agendamentos")
+    const list = res.ok ? (await res.json()) as AgendamentoItem[] : []
+    setAgendaSemanal(buildAgendaSemanal(list))
+  }, [])
 
   useEffect(() => {
     fetch("/api/agendamentos")
@@ -51,6 +82,53 @@ export default function AgendaPage() {
       .catch(() => toast.error("Erro ao carregar agenda"))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    fetch("/api/alunos")
+      .then((res) => res.ok ? res.json() : [])
+      .then((list: { id: string; nome: string }[]) => setAlunos(list.map((a) => ({ id: a.id, nome: a.nome }))))
+      .catch(() => {})
+  }, [])
+
+  const hoje = new Date().toISOString().slice(0, 10)
+
+  const handleAgendar = async () => {
+    if (!formData.trim() || !formHora.trim() || !formAlunoId.trim() || !formTipo.trim()) {
+      toast.error("Preencha data, hora, aluno e tipo.")
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch("/api/agendamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          alunoId: formAlunoId,
+          data: formData,
+          hora: formHora,
+          tipo: formTipo,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        toast.error((err as { error?: string }).error || "Erro ao agendar")
+        return
+      }
+      setDialogOpen(false)
+      setFormData(hoje)
+      setFormHora("08:00")
+      setFormAlunoId("")
+      setFormTipo("Musculacao")
+      toast.success("Treino agendado!")
+      const listRes = await fetch("/api/agendamentos")
+      const list = listRes.ok ? (await listRes.json()) as AgendamentoItem[] : []
+      setAgendaSemanal(buildAgendaSemanal(list))
+    } catch {
+      toast.error("Erro ao agendar")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -67,15 +145,73 @@ export default function AgendaPage() {
           <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
           <p className="text-sm text-muted-foreground">Calendario semanal de treinos</p>
         </div>
-        <Button className="gap-2" onClick={() => toast.success("Treino agendado!")}>
-          <Plus className="h-4 w-4" />
-          Agendar treino
-        </Button>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Agendar treino
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-card">
+            <DialogHeader>
+              <DialogTitle>Agendar treino / aula</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Data</Label>
+                <Input
+                  type="date"
+                  value={formData || hoje}
+                  onChange={(e) => setFormData(e.target.value)}
+                  className="bg-secondary"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Hora</Label>
+                <Input
+                  type="time"
+                  value={formHora}
+                  onChange={(e) => setFormHora(e.target.value)}
+                  className="bg-secondary"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Aluno</Label>
+                <Select value={formAlunoId} onValueChange={setFormAlunoId}>
+                  <SelectTrigger className="bg-secondary">
+                    <SelectValue placeholder="Selecione o aluno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alunos.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Tipo</Label>
+                <Select value={formTipo} onValueChange={setFormTipo}>
+                  <SelectTrigger className="bg-secondary">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIPOS_TREINO.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAgendar} disabled={saving} className="w-full">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Agendar"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {agendaSemanal.map((dia) => (
-          <Card key={dia.dia} className="border-border bg-card">
+          <Card key={dia.data} className="border-border bg-card">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between">
                 <span className="text-base font-bold text-foreground">{dia.dia}</span>

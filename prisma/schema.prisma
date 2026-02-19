@@ -32,6 +32,7 @@ model Aluno {
   email               String?
   telefone            String?
   cpf                 String?
+  dataNascimento      DateTime? @map("data_nascimento")
   planoId             String?   @map("plano_id")
   status              String    @default("Ativo") // Ativo | Inadimplente
   situacaoFinanceira  String?   @map("situacao_financeira") // Em dia | Atrasado
